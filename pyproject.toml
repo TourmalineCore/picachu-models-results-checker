@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "PiCachu"
+version = "0.1.0"
+description = ""
+authors = [
+    "Maria Yadryshnikova <myadryshnikova@tourmalinecore.com>",
+]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "3.8.10"
+requests = "2.27.1"
+flask = "2.2"
+flask-sqlalchemy = "^3.0.2"
+flask-migrate = "^3.1.0"
+psycopg2-binary = "^2.9.5"
+pika = "^1.3.1"
