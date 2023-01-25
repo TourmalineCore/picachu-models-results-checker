@@ -7,7 +7,7 @@ from flask_migrate import upgrade as _upgrade
 from pika import ConnectionParameters, PlainCredentials, BlockingConnection, BasicProperties
 
 from commands.new_photo_id_command import NewPhotoIdCommand
-from config import models_queues_dlx, RabbitMQConfigProvider, rabbitmq_association_queue_name
+from config import models_queues_dlx, RabbitMQConfigProvider, rabbitmq_association_queue_name, results_host
 from domain import PhotoIds
 from domain.dal import db, migrate, build_connection_string
 
@@ -28,7 +28,7 @@ parameters = ConnectionParameters(
 
 
 def ping_server():
-    url = 'http://picachu-api:5000/api/labels'
+    url = f'{results_host}/results/labels'
 
     connection = BlockingConnection(parameters)
     channel = connection.channel()
