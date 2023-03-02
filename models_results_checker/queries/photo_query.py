@@ -1,6 +1,6 @@
-from domain.dal import create_session
 
-from domain import PhotoIds
+from models_results_checker.domain import PhotoIds
+from models_results_checker.domain.data_access_layer.session import session
 
 
 class CheckPhotoQuery:
@@ -8,9 +8,8 @@ class CheckPhotoQuery:
         pass
 
     def by_id(self, photo_id):
-        current_session = create_session()
+        current_session = session()
         try:
-
             return current_session \
                 .query(PhotoIds) \
                 .filter(PhotoIds.id == photo_id) \

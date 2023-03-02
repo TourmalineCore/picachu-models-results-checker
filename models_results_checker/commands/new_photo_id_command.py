@@ -1,5 +1,5 @@
-from domain import PhotoIds
-from domain.dal import create_session
+from models_results_checker.domain import PhotoIds
+from models_results_checker.domain.data_access_layer.session import session
 
 
 class NewPhotoIdCommand:
@@ -8,7 +8,7 @@ class NewPhotoIdCommand:
 
     @staticmethod
     def add_photo_id(photo_id_entity: PhotoIds) -> int:
-        current_session = create_session()
+        current_session = session()
 
         try:
             current_session.add(photo_id_entity)

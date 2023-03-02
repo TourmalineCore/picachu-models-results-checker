@@ -1,4 +1,4 @@
-from domain.dal import db
+from models_results_checker.domain.data_access_layer.db import db
 
 
 class PhotoIds(db.Model):
