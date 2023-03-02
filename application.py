@@ -2,24 +2,22 @@ import json
 import logging
 import time
 
-from flask import Flask, Blueprint
+from flask import Flask
 from flask_migrate import upgrade as _upgrade
 from pika import ConnectionParameters, PlainCredentials, BlockingConnection, BasicProperties
 
-from commands.new_photo_id_command import NewPhotoIdCommand
-from config import models_queues_dlx, RabbitMQConfigProvider, rabbitmq_association_queue_name, results_host
-from domain import PhotoIds
-from domain.dal import db, migrate, build_connection_string
 
 import requests
 
-from queries.photo_query import CheckPhotoQuery
+from models_results_checker.commands.new_photo_id_command import NewPhotoIdCommand
+from models_results_checker.config.host_config import results_host
+from models_results_checker.config.rabbitmq_config import rabbitmq_host, rabbitmq_username, rabbitmq_password, \
+    rabbitmq_association_queue_name, rabbitmq_models_queues_dlx
+from models_results_checker.domain import PhotoIds
+from models_results_checker.domain.data_access_layer.build_connection_string import build_connection_string
+from models_results_checker.domain.data_access_layer.db import db, migrate
+from models_results_checker.queries.photo_query import CheckPhotoQuery
 
-(
-    rabbitmq_host,
-    rabbitmq_username,
-    rabbitmq_password,
-) = RabbitMQConfigProvider.get_config()
 
 parameters = ConnectionParameters(
     host=rabbitmq_host,
@@ -27,8 +25,8 @@ parameters = ConnectionParameters(
 )
 
 
-def ping_server():
-    url = f'{results_host}/results/labels'
+def ping_results_service():
+    url = f'{results_host}/results-service/results'
 
     connection = BlockingConnection(parameters)
     channel = connection.channel()
@@ -36,7 +34,7 @@ def ping_server():
     channel.queue_declare(
         queue=rabbitmq_association_queue_name,
         arguments={
-            "x-dead-letter-exchange": models_queues_dlx,
+            "x-dead-letter-exchange": rabbitmq_models_queues_dlx,
             "x-dead-letter-routing-key": rabbitmq_association_queue_name
         },
         durable=True,  # need to persist the queue that should survive the broker restart
@@ -46,33 +44,33 @@ def ping_server():
 
     while True:
         response = requests.get(url)
-        photo_data = json.loads(response.text)
+        photos_data = json.loads(response.text)
 
-        for item in photo_data:
-            if CheckPhotoQuery().by_id(item["photo_id"]) is not None:
+        for photo_data in photos_data:
+            if CheckPhotoQuery().by_id(photo_data["photo_id"]) is not None:
                 continue
 
-            logging.info(f'New photo with id: {item["photo_id"]}')
+            logging.info(f'New photo with id: {photo_data["photo_id"]}')
 
             try:
                 channel.basic_publish(
                     exchange='',
                     routing_key=rabbitmq_association_queue_name,
-                    body=json.dumps(item),
+                    body=json.dumps(photo_data),
                     properties=BasicProperties(
                         delivery_mode=2,
                     )
                 )
-                logging.warning(f'Message with photo_id: {item["photo_id"]} published')
+                logging.warning(f'Message with photo_id: {photo_data["photo_id"]} published')
 
             except Exception:
                 logging.warning('Aborting...')
                 connection.close()
                 continue
 
-            photo_id_entity = PhotoIds(id=item["photo_id"])
+            photo_id_entity = PhotoIds(id=photo_data["photo_id"])
             NewPhotoIdCommand().add_photo_id(photo_id_entity)
-            logging.info(f'PhotoId inserted to db: {item["photo_id"]}.')
+            logging.info(f'PhotoId inserted to db: {photo_data["photo_id"]}.')
 
         time.sleep(10)
 
@@ -80,7 +78,7 @@ def ping_server():
 def create_app():
     """Application factory, used to create application"""
     app = Flask(__name__)
-    app.config.from_object('config')
+    app.config.from_object('models_results_checker.config.flask_config')
 
     # without this /feeds will work but /feeds/ with the slash at the end won't
     app.url_map.strict_slashes = False
@@ -95,4 +93,4 @@ def create_app():
     with app.app_context():
         _upgrade()
 
-    ping_server()
+    ping_results_service()

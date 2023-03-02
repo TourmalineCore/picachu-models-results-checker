@@ -17,7 +17,7 @@ endif
 ###
 .PHONY: help
 help: ;@true
-	$(info Makefile for Real Estate project)
+	$(info Makefile for Picachu project)
 	$(info )
 	$(info Avaliable targets: )
 	$(info  * run                                       - runs the api locally via **docker**)

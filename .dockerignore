@@ -1,0 +1,25 @@
+# git repository related
+.git
+.gitignore
+.gitattributes
+
+# IDE related
+.ideas
+.pylintrc
+Makefile
+
+# Docker related
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Python project related
+.env*
+
+# Other
+LICENSE
+*.md
+venv/
+
+# debugging tools and utils
+debug/
