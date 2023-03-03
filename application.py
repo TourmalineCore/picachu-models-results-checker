@@ -43,34 +43,40 @@ def ping_results_service():
     )
 
     while True:
-        response = requests.get(url)
-        photos_data = json.loads(response.text)
+        try:
+            response = requests.get(url)
+            photos_data = json.loads(response.text)
 
-        for photo_data in photos_data:
-            if CheckPhotoQuery().by_id(photo_data["photo_id"]) is not None:
-                continue
+            for photo_data in photos_data:
+                if CheckPhotoQuery().by_id(photo_data["photo_id"]) is not None:
+                    continue
 
-            logging.info(f'New photo with id: {photo_data["photo_id"]}')
+                logging.info(f'New photo with id: {photo_data["photo_id"]}')
 
-            try:
-                channel.basic_publish(
-                    exchange='',
-                    routing_key=rabbitmq_association_queue_name,
-                    body=json.dumps(photo_data),
-                    properties=BasicProperties(
-                        delivery_mode=2,
+                try:
+                    channel.basic_publish(
+                        exchange='',
+                        routing_key=rabbitmq_association_queue_name,
+                        body=json.dumps(photo_data),
+                        properties=BasicProperties(
+                            delivery_mode=2,
+                        )
                     )
-                )
-                logging.warning(f'Message with photo_id: {photo_data["photo_id"]} published')
+                    logging.warning(f'Message with photo_id: {photo_data["photo_id"]} published')
 
-            except Exception:
-                logging.warning('Aborting...')
-                connection.close()
-                continue
+                except Exception:
+                    logging.warning('Aborting...')
+                    connection.close()
+                    continue
 
-            photo_id_entity = PhotoIds(id=photo_data["photo_id"])
-            NewPhotoIdCommand().add_photo_id(photo_id_entity)
-            logging.info(f'PhotoId inserted to db: {photo_data["photo_id"]}.')
+                photo_id_entity = PhotoIds(id=photo_data["photo_id"])
+                NewPhotoIdCommand().add_photo_id(photo_id_entity)
+                logging.info(f'PhotoId inserted to db: {photo_data["photo_id"]}.')
+
+        except Exception:
+            logging.warning('Something wrong...')
+            connection.close()
+            continue
 
         time.sleep(10)
 
