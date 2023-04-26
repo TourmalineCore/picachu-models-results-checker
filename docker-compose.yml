@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  run-model-result-checker:
+    container_name: model-result-checker-local-starter
+    restart: "no"
+    image: tianon/true
+    depends_on:
+      - model-result-checker
+
+  model-result-checker:
+    build:
+      context: .
+    container_name: model-result-checker
+    restart: unless-stopped
+    command: poetry run flask run
+    depends_on:
+      - model-result-checker-postgres
+    volumes:
+      - .:/app-workspace
+    env_file:
+      - .env
+    ports:
+      - "7522:5000"
+    networks:
+      - picachu-api-private_picachu-net
+      - internal
+
+  model-result-checker-postgres:
+    container_name: model-result-checker-postgres
+    image: postgres:13.3-alpine
+    restart: always
+    volumes:
+      - model-result-checker-postgres-data:/var/lib/postgresql/data/
+    healthcheck:
+      test: "pg_isready -U $$POSTGRES_USER"
+      timeout: 10s
+      interval: 10s
+      retries: 3
+    env_file:
+      - .env
+    ports:
+      - "7523:5432"
+    networks:
+      - internal
+
+volumes:
+  model-result-checker-postgres-data:
+
+networks:
+  internal: {}
+  picachu-api-private_picachu-net:
+    external: true
