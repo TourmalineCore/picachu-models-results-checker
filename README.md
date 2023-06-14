@@ -1,4 +1,4 @@
-# picachu-models-results-checker
+# tourmanique-models-results-checker
 
 ## Description
 A project to determine the uniqueness of a photo by its components. 
@@ -59,7 +59,7 @@ Then you need to select Python interpreter from Poetry:
 
 | Service                       | Port   |
 |-------------------------------|--------|
-| picachu-api                   | 7501   |
+| tourmanique-api                   | 7501   |
 | ...                           | ...    | 
 | ---------------------------   | ------ |
 | model-result-checker          | 7522   |
@@ -76,7 +76,7 @@ The main idea is to run project in the docker container to be able to run this p
   make run
   ```
 #### Services schema
-![picachu_services_schema.png](picachu_services_schema.png)
+![tourmanique_services_schema.png](tourmanique_services_schema.png)
 
 ### Linting
 

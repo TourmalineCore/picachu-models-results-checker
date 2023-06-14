@@ -23,7 +23,7 @@ services:
     ports:
       - "7522:5000"
     networks:
-      - picachu-api-private_picachu-net
+      - tourmanique-api-private_tourmanique-net
       - internal
 
   model-result-checker-postgres:
@@ -49,5 +49,5 @@ volumes:
 
 networks:
   internal: {}
-  picachu-api-private_picachu-net:
+  tourmanique-api-private_tourmanique-net:
     external: true
